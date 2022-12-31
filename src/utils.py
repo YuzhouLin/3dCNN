@@ -241,7 +241,7 @@ class EngineTest:
         df.to_csv(filename, index=False)
         return
 
-
+'''
 class Model(nn.Module):
     def __init__(self, number_of_class=12, dropout=0.5, k_c=3):
         # k_c: kernel size of channel
@@ -331,6 +331,94 @@ class Model(nn.Module):
             self._fc_prelu2(self._fc_batch_norm2(self._fc2(fc1))))
         output = self._output(fc2)
         return output
+'''
+
+
+class Model(nn.Module):
+    def __init__(self, number_of_class=8, dropout=0.5, k_c=5):
+        # k_c: kernel size of channel
+        super(Model, self).__init__()
+        self._batch_norm0 = nn.BatchNorm3d(1)
+        self._conv1 = nn.Conv3d(1, 32, kernel_size=(k_c, 2, 3), bias=False)
+        self._batch_norm1 = nn.BatchNorm3d(32)
+        self._prelu1 = nn.PReLU(32)
+        self._dropout1 = nn.Dropout3d(dropout)
+        self._pool1 = nn.MaxPool3d(kernel_size=(5, 1, 1))
+
+        self._conv2 = nn.Conv3d(32, 64, kernel_size=(k_c, 2, 2), bias=False)
+        self._batch_norm2 = nn.BatchNorm3d(64)
+        self._prelu2 = nn.PReLU(64)
+        self._dropout2 = nn.Dropout3d(dropout)
+        self._pool2 = nn.MaxPool3d(kernel_size=(5, 1, 1))
+
+        self._conv3 = nn.Conv2d(64, 128, kernel_size=(k_c, 2, 2), bias=False)
+        self._batch_norm3 = nn.BatchNorm3d(128)
+        self._prelu3 = nn.PReLU(128)
+        self._dropout3 = nn.Dropout3d(dropout)
+        self._pool3 = nn.MaxPool3d(kernel_size=(5, 1, 1))
+
+        self._fc1 = nn.Linear(6144*2, 1024)
+        self._fc_batch_norm1 = nn.BatchNorm1d(1024)
+        self._fc_prelu1 = nn.PReLU(1024)
+        self._fc_dropout1 = nn.Dropout(dropout)
+
+        self._fc2 = nn.Linear(1024, 256)
+        self._fc_batch_norm2 = nn.BatchNorm1d(256)
+        self._fc_prelu2 = nn.PReLU(256)
+        self._fc_dropout2 = nn.Dropout(dropout)
+
+        self._output = nn.Linear(256, number_of_class)
+        self.initialize_weights()
+
+        print("Number Parameters: ", self.get_n_params())
+
+    def get_n_params(self):
+        model_parameters = filter(lambda p: p.requires_grad, self.parameters())
+        number_params = sum([np.prod(p.size()) for p in model_parameters])
+        return number_params
+
+    def init_weights(self):
+        for m in self.modules():
+            torch.nn.init.kaiming_normal(m.weight)
+            m.bias.data.zero_()
+
+    def initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv3d) or isinstance(m, nn.Linear):
+                torch.nn.init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            #elif isinstance(m, nn.Linear):
+            #    torch.nn.init.kaiming_normal_(m.weight)
+            #    m.bias.data.zero_()
+
+    def forward(self, x):
+        # x = x.permute(0,1,3,2)  --> batch * 1 * 16 * 50
+        # print(x.size())
+        conv1 = self._dropout1(self._prelu1(self._batch_norm1(self._conv1(self._batch_norm0(x)))))
+        #conv1 = self._dropout1(self._prelu1(self._batch_norm1(self._conv1(x))))
+
+        # conv1 = self._dropout1(
+        # self._prelu1(self._batch_norm1(self._conv1(self._batch_norm0(x)))))
+        pool1 = self._pool1(conv1)
+
+        conv2 = self._dropout2(
+            self._prelu2(self._batch_norm2(self._conv2(pool1))))
+        pool2 = self._pool2(conv2)
+
+        conv3 = self._dropout3(
+            self._prelu3(self._batch_norm3(self._conv3(pool2))))
+        pool3 = self._pool3(conv3)
+        #flatten_tensor = pool2.view(pool2.size(0), -1)
+        flatten_tensor = pool3.view(pool3.size(0), -1)
+        #print(flatten_tensor.size())
+        fc1 = self._fc_dropout1(
+            self._fc_prelu1(self._fc_batch_norm1(self._fc1(flatten_tensor))))
+        fc2 = self._fc_dropout2(
+            self._fc_prelu2(self._fc_batch_norm2(self._fc2(fc1))))
+        output = self._output(fc2)
+        return output
+
 
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):

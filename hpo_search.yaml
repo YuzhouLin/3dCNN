@@ -1,38 +1,51 @@
 DATA_PATH:
-  /../../hy-nas/Data6/Processed/
+  /../../hy-nas/Data6/
 
+DATA_READ:
+  /../../hy-tmp/Data6/
 MODEL_PATH:
-  /models/
-  
+  /../../hy-tmp/models/
+  #/../../hy-nas/models_distill2B/
+  #/../../hy-tmp/models_base2/
 STUDY_PATH:
-  /study/
+  /../../hy-tmp/study/
+  #/../../hy-nas/study_distill2B/
 
 RESULT_PATH:
-  /results/
+  #/../../hy-nas/results_snr2A/ #base2/
+  /../../hy-tmp/results/
   #/results1/
   # /../../hy-tmp/study/
 
-CLASS_NAMES: 
+RESULTS:
+  outputfile:
+    3dCNN.csv
+  data_type:
+    sb: np.int8
+    model: np.string_
+    predict: np.int8
+    actual: np.int8
+    state: np.string_
+    un_nentropy: np.float16
+    un_nnmp: np.float16
+    un_vac: np.float16
+    un_diss: np.float16
+    un_overall: np.float16
+
+CLASS_NAMES:
   ['Rest', 'Large diameter grasp', 'Adducted Thumb grasp', 'Index finger extension grasp', 'Medium wrap', 'Writing tripod grasp', 'Power sphere grasp', 'Precision sphere grasp']
 
+CLASS_LIST:
+  [0, 1, 3, 4, 6, 9, 10, 11]
+
 DATA_CONFIG:
-  sb_n: 2
-  day_list: [1]
+  sb_n: 1
+  day_test_list: [3,4,5] # testing days
+  day_list: [1,2] # train and val
   time_list: [1, 2]
   trial_n: 12
+  trial_val: [11, 12]
   channel_n: 14 # number of sEMG channels
-
-CV:
-  valid_trial_list:
-    #- [2, 8]
-    #- [3, 9]
-    #- [4, 10]
-    #- [5, 11]
-    #- [6, 12]
-    - [1, 4, 7, 10]
-    - [2, 5, 8, 11]
-    - [3, 6, 9, 12]
-  valid_trial_select:  # 4 # if None, use CV
 
 
 DATA_LOADER:
@@ -44,56 +57,54 @@ DATA_LOADER:
 TRAINING:
   epochs: 200
   early_stopping_iter: 10
+  day_n: 2 # the number of days used for training
   model_name: best_hpo
+  retrained_epochs: 200
+  retrained_run: 1
+  retrained_model_name: retrained
+  retrained_from_scratch: True
 
-RETRAINING:
-  epochs: 1
-  model_name: retrained
-  
 HPO_STUDY:
   sampler:
     TPESampler() # eval()
   direction:
     minimize
+    #maximize
   pruner:
     MedianPruner(n_startup_trials=5, n_warmup_steps=1, interval_steps=1) # eval()
   trial_n:
-    25
+    5
 
 HP:
   optimizer:
     Adam
-  batch_size:
-    256
-  
+  batch_base:
+    32
+  scheduler_eps:
+    0.0000001
+  weight_decay:
+    0.0004
+  lr_factor:
+    0.8
+  dropout_rate:
+    0.45
 
-HP_SEARCH:  
+HP_SEARCH:
   EDL0: &edl_base0
     # optimizer:
     #  trial.suggest_categorical("optimizer", ["Adam", "RMSprop", "SGD"])
     lr:
-      trial.suggest_loguniform("lr", 1e-6, 1e-2)
-    #batch_size:
-      #trial.suggest_int("batch_size", 32, 512, step=32)
-    dropout_rate:
-      trial.suggest_float("dropout_rate", 0.1, 0.5)
+      trial.suggest_loguniform("lr", 1e-5, 5e-3)
+    batch_factor:
+      trial.suggest_int("batch_factor", 0, 5)
+    #weight_decay:
+    #  trial.suggest_loguniform("weight_decay", 1e-4, 1e-1)
+    #lr_reduced_factor:
+    #  trial.suggest_float("lr_reduced_factor", 0.2, 0.95)
+    #dropout_rate:
+    #  trial.suggest_float("dropout_rate", 0.1, 0.5)
 
-  TCN: &tcn_base
-    #kernel_size:
-    #  trial.suggest_int("kernel_size", 2, 5)
-      #trial.set_user_attr("kernel_size", 5)
-    layer_n:
-      trial.suggest_int("layer_n", 3, 8)
-    kernel_list:
-      [51, 26, 13, 8, 4, 2]
-  
-    #tcn_channels:
-    #  [32, 64, 128, 256, 512]
-    #tcn_layer_n:
-    #  trial.suggest_int("tcn_layer_n", 3, 6)
-    #init_channel:
-      #trial.suggest_int("init_channel_n", 8, )
-    #  trial.suggest_discrete_uniform("init_channel_n", 2, 64, 2)
+
 
   EDL1: &edl_base1
     <<: *edl_base0
@@ -101,11 +112,9 @@ HP_SEARCH:
       trial.suggest_categorical("evi_fun", ["relu", "softplus", "exp"])
   EDL2: &edl_base2
     <<: *edl_base1
-    annealing_step: 
+    annealing_step:
       trial.suggest_int("annealing_step", 10, 60, step=5)
   EDL3: &edl_base3
     <<: *edl_base1
-    l: 
+    l:
       trial.suggest_float("l", 0.01, 1.0, log=True)
-
-
