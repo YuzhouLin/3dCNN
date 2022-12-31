@@ -47,7 +47,8 @@ def prepare_data(data_params):
                             samples = emg[np.nonzero(np.logical_and(cycle==k, label==m))[0]][:,valid_channel]
                         temp = []
                         for n in range(0,samples.shape[0]-wl, round(wl*data_params['ratio_non_overlap'])):
-                            segdata = samples[n:n+wl,:] # 500*14
+                            # segdata = samples[n:n+wl,:] # 500*14
+			    segdata = np.reshape(samples[n:n+wl,:],(wl,2,7)) # 400 * 2 * 7
                             temp.append(np.expand_dims(segdata, axis=0))
                         X.extend(temp)
                         Y.extend(new_class_label+np.zeros(len(temp)))
