@@ -56,12 +56,13 @@ def prepare_data(data_params):
                         
                         # Segment data for rest
                         rest_start = index[-1] + rest_discard_n 
-                        rest_end = rest_start + round(len(samples)/7)
-                        # for class balance
-                        if rest_end >= len(emg):
-                           rest_end = len(emg)-1
+                        rest_end = rest_start + round(len(samples)/6) # for class balance
                         rest_index = np.arange(rest_start, rest_end, dtype=int)
                         
+                        if len(emg)==1423904:
+                            print(rest_index)
+                            print(k,m)
+
                         samples_rest = emg[rest_index][:,valid_channel]
                         
                         temp = []
