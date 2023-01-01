@@ -78,7 +78,7 @@ if __name__ == "__main__":
     with open("hpo_search.yaml", 'r') as f:
         cfg = edict(yaml.load(f, Loader=yaml.SafeLoader))
 
-    for sb_n in [1]:#[1,3,4,5,6,7,8,10]:
+    for sb_n in [10]:
         cfg.sb_n = sb_n
         data_prepared(cfg)
 

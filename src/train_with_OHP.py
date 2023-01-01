@@ -8,19 +8,18 @@ import yaml
 from easydict import EasyDict as edict
 from torch.utils.data import TensorDataset, WeightedRandomSampler
 from scipy.stats import hmean
+from torchsummary import summary
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--edl', type=int, default=0,
     help='0: no edl; 1: edl without kl; 2: edl with kl (annealing); \
         3: edl with kl (trade-off)')
-parser.add_argument('--tcn', action='store_true', default=False,
-                    help='to use tcn if it activates, cnn otherwise')
 
 args = parser.parse_args()
 
 EDL_USED = args.edl
-TCN_USED = args.tcn
 DEVICE = pre.try_gpu()
 
 
@@ -36,33 +35,16 @@ def run_training_try(cfg):
         val_X = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t2.npy')), axis=0)
         train_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t2.npy')), axis=0)
         val_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t2.npy')), axis=0)
-        train_W = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d1_t2.npy')), axis=0)
-        val_W = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d1_t2.npy')), axis=0)
     elif cfg.TRAINING.day_n==2:
         train_X = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d2_t2.npy')), axis=0)
         val_X = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d2_t2.npy')), axis=0)
         train_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d2_t2.npy')), axis=0)
         val_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d2_t2.npy')), axis=0)
-        train_W = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d2_t2.npy')), axis=0)
-        val_W = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d2_t2.npy')), axis=0)
 
-    X_train_torch = torch.from_numpy(np.array(train_X, dtype=np.float32)).permute(0, 1, 3, 2) # ([5101, 1, 14, 400])
+    X_train_torch = torch.from_numpy(np.array(train_X, dtype=np.float32)) #.permute(0, 1, 3, 2) # ([5101, 1, 14, 400])
     Y_train_torch = torch.from_numpy(np.array(train_Y, dtype=np.int64))
-    X_val_torch = torch.from_numpy(np.array(val_X, dtype=np.float32)).permute(0, 1, 3, 2) # ([5101, 1, 14, 400])
+    X_val_torch = torch.from_numpy(np.array(val_X, dtype=np.float32)) #.permute(0, 1, 3, 2) # ([5101, 1, 14, 400])
     Y_val_torch = torch.from_numpy(np.array(val_Y, dtype=np.int64))
-
-
-
-    if TCN_USED:
-        X_train_torch = torch.squeeze(X_train_torch, 1) # ([5101, 14, 400])
-        X_val_torch = torch.squeeze(X_val_torch, 1)
-
-
-    #W_train_torch = torch.from_numpy(np.array(train_W,dtype=np.float32))
-    #W_val_torch = torch.from_numpy(np.array(val_W,dtype=np.float32))
-
-    #W_train_torch = torch.from_numpy(np.array(1*(train_W),dtype=np.float32))
-    #W_val_torch = torch.from_numpy(np.array(1*(val_W),dtype=np.float32))
 
 
     W_train_torch = torch.ones(len(Y_train_torch),dtype=torch.float32)
@@ -104,11 +86,7 @@ def run_training_try(cfg):
     # to do: write a function to get trainloaders
 
     # Load Model
-    if TCN_USED:
-        #model = utils.TCN(input_size=cfg.DATA_CONFIG.channel_n, output_size=n_class, num_channels=cfg.HP.tcn_channels, kernel_size=cfg.HP.kernel_size, dropout=cfg.HP.dropout_rate)
-        model = utils.TCN(input_size=cfg.DATA_CONFIG.channel_n, output_size=n_class, num_channels=cfg.HP.layer_n*[cfg.DATA_CONFIG.channel_n], kernel_size=cfg.HP.kernel_size, dropout=cfg.HP.dropout_rate)
-    else:
-        model = utils.Model(number_of_class=n_class, dropout=cfg.HP.dropout_rate)
+    model = utils.Model(number_of_class=n_class, dropout=cfg.HP.dropout_rate)
 
     if not cfg.TRAINING.retrained_from_scratch:
         print('train from best_hpo')
@@ -200,44 +178,25 @@ def run_training(cfg):
         val_X = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t2.npy')), axis=0)
         train_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t2.npy')), axis=0)
         val_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t2.npy')), axis=0)
-        train_W = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/W_d1_t2.npy')), axis=0)
-        val_W = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/W_d1_t2.npy')), axis=0)
     elif cfg.TRAINING.day_n==2:
         train_X = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/X_d2_t2.npy')), axis=0)
         val_X = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/X_d2_t2.npy')), axis=0)
         train_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/train/Y_d2_t2.npy')), axis=0)
         val_Y = np.concatenate((np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d1_t2.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d2_t1.npy'),np.load(cfg.DATA_PATH+f's{sb_n}/val/Y_d2_t2.npy')), axis=0)
 
-
-    X_train_torch = torch.from_numpy(np.array(train_X, dtype=np.float32)).permute(0, 1, 3, 2) # ([5101, 1, 14, 400])
+    
+    X_train_torch = torch.from_numpy(np.array(train_X, dtype=np.float32))# ([5101, 1, 14, 400])
+    print(X_train_torch.size())
     Y_train_torch = torch.from_numpy(np.array(train_Y, dtype=np.int64))
-    X_val_torch = torch.from_numpy(np.array(val_X, dtype=np.float32)).permute(0, 1, 3, 2) # ([5101, 1, 14, 400])
+    X_val_torch = torch.from_numpy(np.array(val_X, dtype=np.float32)) # ([5101, 1, 14, 400])
     Y_val_torch = torch.from_numpy(np.array(val_Y, dtype=np.int64))
 
 
-
-    if TCN_USED:
-        X_train_torch = torch.squeeze(X_train_torch, 1) # ([5101, 14, 400])
-        X_val_torch = torch.squeeze(X_val_torch, 1)
-
-
-    #W_train_torch = torch.from_numpy(np.array(train_W,dtype=np.float32))
-    #W_val_torch = torch.from_numpy(np.array(val_W,dtype=np.float32))
-
-    train_W = np.load(cfg.DATA_PATH+f's{sb_n}/train/W.npy')
-    W_train_torch = torch.from_numpy(np.array(train_W,dtype=np.float32))
-
-    #W_train_torch = torch.from_numpy(np.array(1*(train_W),dtype=np.float32))
-    #W_val_torch = torch.from_numpy(np.array(1*(val_W),dtype=np.float32))
-
-
-    #W_train_torch = torch.ones(len(Y_train_torch),dtype=torch.float32)
+    W_train_torch = torch.ones(len(Y_train_torch),dtype=torch.float32)
     W_val_torch = torch.ones(len(Y_val_torch),dtype=torch.float32)
-
 
     train_data = TensorDataset(X_train_torch, Y_train_torch, W_train_torch)
     val_data = TensorDataset(X_val_torch, Y_val_torch, W_val_torch)
-
 
     _, train_class_counts = np.unique(train_Y, return_counts=True)
     _, val_class_counts = np.unique(val_Y, return_counts=True)
@@ -269,12 +228,8 @@ def run_training(cfg):
 
 
     # Load Model
-    if TCN_USED:
-        #model = utils.TCN(input_size=cfg.DATA_CONFIG.channel_n, output_size=n_class, num_channels=cfg.HP.tcn_channels, kernel_size=cfg.HP.kernel_size, dropout=cfg.HP.dropout_rate)
-        model = utils.TCN(input_size=cfg.DATA_CONFIG.channel_n, output_size=n_class, num_channels=cfg.HP.layer_n*[cfg.DATA_CONFIG.channel_n], kernel_size=cfg.HP.kernel_size, dropout=cfg.HP.dropout_rate)
-    else:
-        model = utils.Model(number_of_class=n_class, dropout=cfg.HP.dropout_rate)
-
+    model = utils.Model(number_of_class=n_class, dropout=cfg.HP.dropout_rate)
+    
     if not cfg.TRAINING.retrained_from_scratch:
         print('train from best_hpo')
         checkpoint = torch.load(cfg.model_path+f'/{cfg.TRAINING.model_name}_sb{cfg.DATA_CONFIG.sb_n}.pt')#, map_location=torch.device('cpu'))
@@ -282,6 +237,7 @@ def run_training(cfg):
 
 
     model.to(DEVICE)
+    summary(model, input_size=(1,400,2,7), batch_size=-1)
     optimizer = getattr(
         torch.optim,cfg.HP.optimizer)(model.parameters(), lr=cfg.HP.lr, weight_decay=cfg.HP.weight_decay, betas=(0.5, 0.999))
 
@@ -456,13 +412,13 @@ def run_retraining(cfg):
 def prepared_cfg(sb_n):
 
     # Load config file
-    with open("hpo_search_clean.yaml", 'r') as f:
+    with open("hpo_search.yaml", 'r') as f:
         cfg = edict(yaml.load(f, Loader=yaml.SafeLoader))
 
     #sb_n=cfg.DATA_CONFIG.sb_n
     cfg.DATA_CONFIG.sb_n = sb_n
     # Check study path
-    study_dir = f'etcn{EDL_USED}' if TCN_USED else f'ecnn{EDL_USED}'
+    study_dir = f'ecnn{EDL_USED}'
     study_path = os.getcwd() + cfg.STUDY_PATH + study_dir
     with open(f'{study_path}/sb_{cfg.DATA_CONFIG.sb_n}', 'r') as f:
         hp_study = yaml.load(f, Loader=yaml.SafeLoader)
@@ -472,9 +428,6 @@ def prepared_cfg(sb_n):
     for key, item in hp_study[1].items():
         cfg.HP[key] =  item
     cfg.HP['batch_size'] = cfg.HP['batch_base']*2**cfg.HP['batch_factor']
-    if TCN_USED:
-        cfg.HP['layer_n'] = eval(cfg.HP_SEARCH['TCN'].layer_n)
-        cfg.HP['kernel_size'] = cfg.HP_SEARCH['TCN'].kernel_list[cfg.HP['layer_n']-3]
 
     # Check model saved path
     cfg.model_path = os.getcwd() + cfg.MODEL_PATH + study_dir
@@ -501,7 +454,7 @@ def prepared_cfg(sb_n):
 if __name__ == "__main__":
 
 
-    for sb_n in [10]:
+    for sb_n in [1]:
         cfg = prepared_cfg(sb_n)
         run_training(cfg)
         #cfg.HP.lr*=0.1

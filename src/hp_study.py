@@ -177,7 +177,7 @@ def cv_hyperparam_study(sb_n):
         sampler=sampler,  # parametrs sampling strategy
         pruner=eval(cfg.HPO_STUDY.pruner),
         #study_name=study_dir+f'_sb{sb_n}_{re.findall(r"_(.+)/", cfg.STUDY_PATH)[0]}', #baseline{cfg.TRAINING.day_n}
-        storage=f"sqlite:///{study_dir}/sb{sb_n}.db",
+        storage=f"sqlite:///{study_dir}-sb{sb_n}.db",
         study_name = study_dir+f'_sb{sb_n}',
         load_if_exists=True
     )
