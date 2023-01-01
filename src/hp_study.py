@@ -154,7 +154,7 @@ def objective(trial, cfg):
 def cv_hyperparam_study(sb_n):
 
     # Load config file
-    with open("hpo_search_clean.yaml", 'r') as f:
+    with open("hpo_search.yaml", 'r') as f:
         cfg = edict(yaml.load(f, Loader=yaml.SafeLoader))
 
     cfg.DATA_CONFIG.sb_n = sb_n
@@ -171,14 +171,14 @@ def cv_hyperparam_study(sb_n):
 
     # Create Optuna Study
 
-
     sampler = eval(cfg.HPO_STUDY.sampler)
     study = optuna.create_study(
         direction=cfg.HPO_STUDY.direction,  # maximaze or minimaze our objective
         sampler=sampler,  # parametrs sampling strategy
         pruner=eval(cfg.HPO_STUDY.pruner),
-        study_name=study_dir+f'_sb{sb_n}_{re.findall(r"_(.+)/", cfg.STUDY_PATH)[0]}', #baseline{cfg.TRAINING.day_n}
-        storage=f"sqlite:///study/{study_dir}/sb{sb_n}.db",
+        #study_name=study_dir+f'_sb{sb_n}_{re.findall(r"_(.+)/", cfg.STUDY_PATH)[0]}', #baseline{cfg.TRAINING.day_n}
+        storage=f"sqlite:///{study_dir}/sb{sb_n}.db",
+        study_name = study_dir+f'_sb{sb_n}',
         load_if_exists=True
     )
     study.optimize(lambda trial: objective(trial, cfg), n_trials=cfg.HPO_STUDY.trial_n)

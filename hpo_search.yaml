@@ -8,7 +8,7 @@ MODEL_PATH:
   #/../../hy-nas/models_distill2B/
   #/../../hy-tmp/models_base2/
 STUDY_PATH:
-  /../../hy-tmp/study/
+  /study/
   #/../../hy-nas/study_distill2B/
 
 RESULT_PATH:
