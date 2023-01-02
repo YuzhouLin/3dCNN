@@ -1,0 +1,6 @@
+- best_loss: 0.5110905946869599
+- annealing_step: 25
+  batch_factor: 0
+  evi_fun: softplus
+  lr: 0.00027082702332620605
+

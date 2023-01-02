@@ -1,0 +1,5 @@
+- best_loss: 0.38530298074086505
+- batch_factor: 5
+  evi_fun: relu
+  lr: 0.00018667311678805917
+

@@ -1,0 +1,5 @@
+- best_loss: 0.584656963100681
+- annealing_step: 35
+  batch_factor: 2
+  evi_fun: exp
+  lr: 0.0007812967434528679

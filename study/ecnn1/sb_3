@@ -1,0 +1,5 @@
+- best_loss: 0.31575993265545665
+- batch_factor: 0
+  evi_fun: softplus
+  lr: 0.00011895061542019032
+

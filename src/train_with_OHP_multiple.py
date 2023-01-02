@@ -8,7 +8,7 @@ import yaml
 from easydict import EasyDict as edict
 from torch.utils.data import TensorDataset, WeightedRandomSampler
 from scipy.stats import hmean
-from torchsummary import summary
+#from torchsummary import summary
 import time
 
 
@@ -170,8 +170,10 @@ def prepared_cfg(sb_n):
 
 if __name__ == "__main__":
 
-    print(time.ctime())
-    for sb_n in [1]:
+    #print(time.ctime())
+    for sb_n in [3,4,5]:
         cfg = prepared_cfg(sb_n)
         run_training(cfg)
-    print(time.ctime())
+    #print(time.ctime())
+
+    os.system('shutdown')
