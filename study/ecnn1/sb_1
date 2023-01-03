@@ -1,4 +1,4 @@
-- best_loss: 0.3213106294473012
-- batch_factor: 5
-  evi_fun: exp
-  lr: 0.00025571562309952966
+- best_loss: 0.36048397189610965
+- batch_factor: 1
+  evi_fun: relu
+  lr: 0.0010543734335182124
