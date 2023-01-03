@@ -1,0 +1,109 @@
+
+MODEL_PATH:
+  /../../hy-tmp/models/
+
+STUDY_PATH:
+  /study/
+
+RESULT_PATH:
+  loaded: /../../hy-tmp/results/
+  #loaded: /results_distill2B/
+  analysed: /analysed_results/
+
+CLASS_NAMES:
+  ['Rest', 'Large diameter grasp', 'Adducted Thumb grasp', 'Index finger extension grasp', 'Medium wrap', 'Writing tripod grasp', 'Power sphere grasp', 'Precision sphere grasp']
+
+RESULTS:
+  experiment:
+    - Baseline1
+    - Baseline2
+    - Distilled1
+    - Distilled2B
+    - Distilled2_ecnn2
+    #- Baseline2_try1
+    #- ecnn2_diss
+    #- ecnn0_retrained10
+    #- ecnn0_snr2A
+    #- Baseline2_ecnn2
+  output:
+    threshold_list: []
+    ACC_list: []
+    TAR_list: []
+    TRR_list: []
+    RR_list: []
+  reliability:
+    DATA_TYPE:
+      run: np.int8
+      #distilled: np.bool_
+      sb: np.int8
+      model: np.string_
+      score: np.string_
+      AUROC: np.float16
+      AUPR: np.float16
+      nAUPR: np.float16
+    scores: ["un_nentropy", "un_nnmp", "un_vac", "un_diss"]
+    filename: reliability.csv
+  accuracy:
+    DATA_TYPE:
+      run: np.int8
+      #distilled: np.bool_
+      sb: np.int8
+      state: np.string_
+      model: np.string_
+      day: np.int8
+      period: np.string_
+      acc: np.float16
+    filename: accuracy.csv
+  rejection:
+    DATA_TYPE:
+      run: np.int8
+      #distilled: np.bool_
+      sb: np.int8
+      model: np.string_
+      day: np.int8
+      period: np.string_
+      threshold: np.float16
+      score: np.string_
+      TAR: np.float16
+      TRR: np.float16
+      RR: np.float16
+      #J: np.float16
+    filename: rej_R2_constraint.csv
+  rejection_multi:
+    DATA_TYPE:
+      run: np.int8
+      #distilled: np.bool_
+      sb: np.int8
+      model: np.string_
+      day: np.int8
+      period: np.string_
+      threshold_vac: np.float16
+      threshold_diss: np.float16
+      TAR: np.float16
+      TRR: np.float16
+      RR: np.float16
+    filename: rej_R2_constraint_multi.csv
+
+
+
+DATA_TYPE:
+  sb: np.int8
+  model: np.string_
+  predict: np.int8
+  actual: np.int8
+  state: np.string_
+  un_nentropy: np.float16
+  un_nnmp: np.float16
+  un_vac: np.float16
+  un_diss: np.float16
+  un_overall: np.float16
+
+TEST_CONFIG:
+  sb_n: 2
+  sb_list: [1,3,4,5,6,7,8,10]
+  period_list: [1, 2]
+  day_list:
+    - [2,3,4,5]
+    - [3,4,5]
+
+

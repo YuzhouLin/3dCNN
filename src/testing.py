@@ -177,7 +177,6 @@ def test_all(cfg):
     df_new = pd.DataFrame(test_dict)
 
 
-    '''
     if os.path.exists(cfg.result_file):
         df = pd.read_csv(cfg.result_file, dtype={"sb": np.int8, "model":np.string_, "day": np.int8, "time": np.int8, "predict": np.int8, "actual": np.int8, "state": np.string_, "un_nentropy": np.float16, "un_nnmp": np.float16, "un_vac": np.float16, "un_diss": np.float16, "un_overall": np.float16})
         df = pd.concat([df, df_new], ignore_index=True)
@@ -185,8 +184,8 @@ def test_all(cfg):
         df = df_new
 
     df.to_csv(cfg.result_file, float_format=np.float16, index=False)
-    '''
-    df_new.to_csv(cfg.result_file, float_format=np.float16, index=False)
+    
+    #df_new.to_csv(cfg.result_file, float_format=np.float16, index=False)
     return
 
 def quick_test(cfg):
@@ -252,8 +251,8 @@ if __name__ == "__main__":
     print(cfg.model_name)
     study_path = os.getcwd() + cfg.STUDY_PATH + study_dir
 
-    #for sb_n in [1,3,4,5,6,7,8,10]:
-    for sb_n in [1]:
+    for sb_n in [1,3,4,5,6,7,8,10]:
+    #for sb_n in [1]:
         cfg.DATA_CONFIG.sb_n = sb_n
 
         with open(f'{study_path}/sb_{cfg.DATA_CONFIG.sb_n}', 'r') as f:
@@ -270,8 +269,10 @@ if __name__ == "__main__":
 
         cfg.index = 'window'
 
-        #cfg.result_path = cfg.result_path + f'/sb{cfg.DATA_CONFIG.sb_n}'
+        cfg.result_path = os.getcwd() + cfg.RESULT_PATH 
+      
 
+        '''
         if retrained:
             cfg.test_model = cfg.model_path+f'/{cfg.TRAINING.retrained_model_name}_sb{cfg.DATA_CONFIG.sb_n}.pt'
             #cfg.test_model = cfg.model_path+f'/{cfg.RETRAINING.model_name}{cfg.RETRAINING.epochs}_sb{cfg.DATA_CONFIG.sb_n}.pt' # test from the retrained model with the model initialisation using the best model saved during HPO
@@ -279,9 +280,13 @@ if __name__ == "__main__":
             cfg.test_model = cfg.model_path+f'/{cfg.TRAINING.model_name}_sb{cfg.DATA_CONFIG.sb_n}.pt' # test directly from the best model saved during HPO
         #
         #
-
-        #cfg.result_file = cfg.RESULT_PATH+'SampleWeightedTrainingResultsVal.csv'#'./SampleReversedWeightedTrainingResults.csv'
-        cfg.result_file = cfg.RESULT_PATH+cfg.RESULTS.outputfile
-        #test_all(cfg)
-
-        quick_test(cfg)
+        '''
+        for i in range(1,11):
+            cfg.TRAINING.retrained_run = i
+            cfg.test_model = cfg.model_path+f'/{cfg.TRAINING.retrained_model_name}_sb{cfg.DATA_CONFIG.sb_n}_run{cfg.TRAINING.retrained_run}.pt'
+            cfg.result_file = cfg.result_path+f'run{cfg.TRAINING.retrained_run}_{study_dir}.csv'
+            test_all(cfg)
+            #print(cfg.test_model)
+            #print(cfg.result_file)
+        
+        #quick_test(cfg)

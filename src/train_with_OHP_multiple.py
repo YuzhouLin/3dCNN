@@ -80,7 +80,8 @@ def run_training(cfg):
     }
 
 
-    for run_i in range(1,11): # train many times for validation purpose
+    #for run_i in range(1,11): # train many times for validation purpose
+    for run_i in [10]:
         # Load Model
         model = utils.Model(number_of_class=n_class, dropout=cfg.HP.dropout_rate)
     
@@ -171,7 +172,7 @@ def prepared_cfg(sb_n):
 if __name__ == "__main__":
 
     #print(time.ctime())
-    for sb_n in [3,4,5]:
+    for sb_n in [5]:
         cfg = prepared_cfg(sb_n)
         run_training(cfg)
     #print(time.ctime())

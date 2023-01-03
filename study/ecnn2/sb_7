@@ -1,4 +1,4 @@
- best_loss: 0.7700256639056735
+- best_loss: 0.7700256639056735
 - annealing_step: 15
   batch_factor: 5
   evi_fun: relu
