@@ -172,9 +172,9 @@ def prepared_cfg(sb_n):
 if __name__ == "__main__":
 
     #print(time.ctime())
-    for sb_n in [5]:
+    for sb_n in [1]:
         cfg = prepared_cfg(sb_n)
         run_training(cfg)
     #print(time.ctime())
 
-    os.system('shutdown')
+    #os.system('shutdown')

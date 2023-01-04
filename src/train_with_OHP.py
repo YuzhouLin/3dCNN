@@ -238,6 +238,8 @@ def run_training(cfg):
 
     model.to(DEVICE)
     summary(model, input_size=(1,400,2,7), batch_size=-1)
+    #summary(model, input_size=(1,14,400), batch_size=-1)
+    #exit()
     optimizer = getattr(
         torch.optim,cfg.HP.optimizer)(model.parameters(), lr=cfg.HP.lr, weight_decay=cfg.HP.weight_decay, betas=(0.5, 0.999))
 

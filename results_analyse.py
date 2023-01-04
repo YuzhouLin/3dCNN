@@ -390,12 +390,11 @@ if __name__ == "__main__":
         for model in ["ecnn0", "ecnn1", "ecnn2", "ecnn3"]:
             df_base_selected =  pd.read_csv(f'{cfg.RESULT_PATH.loaded}run{i}_{model}.csv', dtype=cfg.DATA_TYPE)
             cfg.model = model
-            #update_reliability(df_base_selected, cfg)
             update_acc(df_base_selected, cfg)
             update_rej_R(df_base_selected, cfg)
-    ''' 
+    
 
-    '''
+    
     for i in range(1,11):
         cfg.run=i
         for model in ["ecnn1", "ecnn2", "ecnn3"]:
@@ -405,5 +404,9 @@ if __name__ == "__main__":
     '''
     for model in ["ecnn1", "ecnn2"]:
         cfg.model=model
-        #update_rej_CM_multi_dimension(cfg)
+        update_rej_CM_multi_dimension(cfg)
         update_CM_baseline(cfg)
+
+    #cfg.model="ecnn1"
+    #update_rej_CM_multi_dimension(cfg)
+

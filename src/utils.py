@@ -241,7 +241,6 @@ class EngineTest:
         df.to_csv(filename, index=False)
         return
 
-
 class Model(nn.Module):
     def __init__(self, number_of_class=8, dropout=0.5, k_c=3):
         # k_c: kernel size of channel
@@ -326,7 +325,6 @@ class Model(nn.Module):
             self._fc_prelu2(self._fc_batch_norm2(self._fc2(fc1))))
         output = self._output(fc2)
         return output
-
 
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):

@@ -272,7 +272,7 @@ if __name__ == "__main__":
         cfg.result_path = os.getcwd() + cfg.RESULT_PATH 
       
 
-        '''
+        
         if retrained:
             cfg.test_model = cfg.model_path+f'/{cfg.TRAINING.retrained_model_name}_sb{cfg.DATA_CONFIG.sb_n}.pt'
             #cfg.test_model = cfg.model_path+f'/{cfg.RETRAINING.model_name}{cfg.RETRAINING.epochs}_sb{cfg.DATA_CONFIG.sb_n}.pt' # test from the retrained model with the model initialisation using the best model saved during HPO
@@ -280,12 +280,15 @@ if __name__ == "__main__":
             cfg.test_model = cfg.model_path+f'/{cfg.TRAINING.model_name}_sb{cfg.DATA_CONFIG.sb_n}.pt' # test directly from the best model saved during HPO
         #
         #
-        '''
+        
+        
+        #for i in [1]:
         for i in range(1,11):
             cfg.TRAINING.retrained_run = i
             cfg.test_model = cfg.model_path+f'/{cfg.TRAINING.retrained_model_name}_sb{cfg.DATA_CONFIG.sb_n}_run{cfg.TRAINING.retrained_run}.pt'
             cfg.result_file = cfg.result_path+f'run{cfg.TRAINING.retrained_run}_{study_dir}.csv'
             test_all(cfg)
+            #quick_test(cfg)
             #print(cfg.test_model)
             #print(cfg.result_file)
         
