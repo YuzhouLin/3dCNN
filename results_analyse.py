@@ -123,9 +123,8 @@ def update_rej_CM_multi_dimension(cfg):
 
             Y_test = df_tmp_test['actual']==df_tmp_test['predict']
             valid_pred =  (df_tmp_test["un_vac"] < threshold_vac) & (df_tmp_test["un_diss"] < threshold_diss)
-            if np.sum(valid_pred)==0:
-                continue
-            cm[n,...,0:-1] += confusion_matrix(df_tmp_test[valid_pred]['actual'],df_tmp_test[valid_pred]['predict'])
+            if np.sum(valid_pred)!=0:
+                cm[n,...,0:-1] += confusion_matrix(df_tmp_test[valid_pred]['actual'],df_tmp_test[valid_pred]['predict'])
         
             for i in range(8):
                 n_i = np.sum(df_tmp_test['actual']==i)
@@ -405,7 +404,7 @@ if __name__ == "__main__":
     for model in ["ecnn1", "ecnn2"]:
         cfg.model=model
         update_rej_CM_multi_dimension(cfg)
-        update_CM_baseline(cfg)
+        #update_CM_baseline(cfg)
 
     #cfg.model="ecnn1"
     #update_rej_CM_multi_dimension(cfg)
